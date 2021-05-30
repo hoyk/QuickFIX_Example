@@ -40,8 +40,8 @@ class Application(fix.Application):
 
     def toAdmin(self, message, sessionID):
         if message.getHeader().getField(35) == 'A' :
-            message.getHeader().setField(fix.StringField(95, userlib.publicKeyLen))
-            message.getHeader().setField(fix.StringField(96, userlib.publicKey))
+            message.getHeader().setField(fix.StringField(95, '32'))
+            message.getHeader().setField(fix.StringField(96, os.environ.get('Orbis_FIX_Token')))
 
         msg = message.toString().replace(__SOH__, " ")
         logfix.info(f"S >> {msg}")

@@ -35,7 +35,6 @@ initiator/Sessions/*.body
 initiator/Sessions/*.header
 initiator/Sessions/*.seqnums
 initiator/Sessions/*.session
-initiator/userlib.py
 
 
 # PyInstaller
