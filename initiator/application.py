@@ -5,11 +5,12 @@ import sys
 import os
 # from datetime import datetime
 import quickfix as fix
+import quickfix42 as fix42
 import time
 import logging
 import userlib
 import customizeOrder
-from testscenario import genExecID, cancelOrder, cancelReplaceOrder, generateDollarAmountOrder, generateOrder, generatePrePostOrder
+from testscenario import genExecID, cancelOrder, cancelReplaceOrder, generateDollarAmountOrder, generateOrder, generatePrePostOrder, resetSequence
 from datetime import datetime
 from model.logger import setup_logger
 from model import Field
@@ -303,15 +304,19 @@ class Application(fix.Application):
         fix.Session.sendToTarget(trade, self.sessionID)
 
     def Test_C(self):
-        trade = generateDollarAmountOrder('AAPL', 'buy', 200)
+        trade = generateDollarAmountOrder('AAPL', 'buy', 1, 100, 'limit', 200)
         fix.Session.sendToTarget(trade, self.sessionID)
 
     def Test_D(self):
-        trade = generateDollarAmountOrder('GM', 'sell', 200)
+        trade = generateDollarAmountOrder('GM', 'sell', 1, 50, 'market')
         fix.Session.sendToTarget(trade, self.sessionID)
 
     def Test_E(self):
-        trade = generatePrePostOrder('PDD', 'buy', 1, 135.44)
+        trade = generatePrePostOrder('NOK', 'buy', 1, 3.1)
+        fix.Session.sendToTarget(trade, self.sessionID)
+
+    def reset_sequence(self):
+        trade = resetSequence()
         fix.Session.sendToTarget(trade, self.sessionID)
 
     def customizeOrder(self):
@@ -324,8 +329,11 @@ class Application(fix.Application):
         OrderQty = answer['OrderQty']
         TimeInForce = userlib.TimeInForce_Match(answer['TimeInForce'])
         StopPx = answer['StopPx'] if 'StopPx' in answer.keys() else None
+        prepost = answer['prepost'] if 'prepost' in answer.keys() else None
         NoTradingSessions = answer['NoTradingSessions'] if 'NoTradingSessions' in answer.keys() else None
-        TradingSessionID = answer['TradingSessionID'] if 'TradingSessionID' in answer.keys() else None
+        TradingSessionID1 = answer['TradingSessionID1'] if 'TradingSessionID1' in answer.keys() else None
+        TradingSessionID2 = answer['TradingSessionID2'] if 'TradingSessionID2' in answer.keys() else None
+        TradingSessionID3 = answer['TradingSessionID3'] if 'TradingSessionID3' in answer.keys() else None
 
         ## Generate Order
         trade = fix.Message()
@@ -333,31 +341,51 @@ class Application(fix.Application):
         trade.getHeader().setField(fix.MsgType(fix.MsgType_NewOrderSingle))  #35 = D
 
         trade.setField(fix.Account('TRYIKANG'))   #1 = 'TRYIKANG'
+
         trade.setField(fix.ClOrdID(genExecID()))  #11 = Unique order
         # trade.setField(fix.ExecInst(fix.ExecInst_ALL_OR_NONE))  #18 = G
         trade.setField(fix.HandlInst(fix.HandlInst_AUTOMATED_EXECUTION_ORDER_PRIVATE_NO_BROKER_INTERVENTION))  # 21 = 1
 
         trade.setField(fix.OrderQty(float(OrderQty)))  #38 = 
         trade.setField(fix.OrdType(OrdType))  # 40 = 2 (limit order)
+
+        # trade.setField(fix.Text('MESSAGE'))   # 58
+        # trade.setField(fix.IDSource('8'))    # 22
         
         trade.setField(fix.Side(Side))  #54 = 1
         trade.setField(fix.Symbol(Symbol))  # 55 = MSFT
         trade.setField(fix.TimeInForce(TimeInForce))  #59 = 0
-        
+
+        trade.setField(fix.SecurityExchange('U'))  # 207
+        trade.setField(fix.SecurityType('CS'))  # 167        
 
         if Price:
             trade.setField(fix.Price(float(Price)))   #44 = 
-        if NoTradingSessions:
-            trade.setField(fix.NoTradingSessions(int(NoTradingSessions)))  # 386 = 
-        if TradingSessionID:
-            trade.setField(fix.TradingSessionID(TradingSessionID))   # 336 =
+            
+        if prepost:
+            gp = fix42.NewOrderSingle.NoTradingSessions()
+            if NoTradingSessions == '3':
+                gp.setField(fix.TradingSessionID(TradingSessionID1))
+                trade.addGroup(gp)
+                gp.setField(fix.TradingSessionID(TradingSessionID2))
+                trade.addGroup(gp)
+                gp.setField(fix.TradingSessionID(TradingSessionID3))
+                trade.addGroup(gp)
+
+            if NoTradingSessions == '2':
+                gp.setField(fix.TradingSessionID(TradingSessionID1))
+                trade.addGroup(gp)
+                gp.setField(fix.TradingSessionID(TradingSessionID2))
+                trade.addGroup(gp)
+
+            if NoTradingSessions == '1':
+                gp.setField(fix.TradingSessionID(TradingSessionID1))
+                trade.addGroup(gp)
+
         if CashOrderQty:
             trade.setField(fix.CashOrderQty(float(CashOrderQty)))  # 152
         if StopPx:
             trade.setField(fix.StopPx(float(StopPx)))  # 99
-
-        # trade.setField(fix.StringField(386, '1'))
-        # trade.setField(fix.StringField(336, 'PRE'))
 
         dnow = datetime.utcnow().strftime('%Y%m%d-%H:%M:%S.%f')[:-3]
         tTag = fix.TransactTime()
@@ -533,6 +561,10 @@ class Application(fix.Application):
             if myInput == 'input':
                 print('Customize order')
                 self.customizeOrder()
+
+            if myInput == 'reset':
+                print('Reset sequence')
+                self.reset_sequence()
 
             if myInput == 'exit':
                 print('[User exit]')

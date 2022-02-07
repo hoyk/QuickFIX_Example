@@ -32,7 +32,7 @@ def ask_order(**kwargs):
             "type": "text",
             "name": "CashOrderQty",
             "message": "(152) Dollor order amount: ",
-            "when": lambda x: x['OrdType'] == 'Market',
+            # "when": lambda x: x['OrdType'] == 'Market',
         },
         {
             "type": "text",
@@ -60,18 +60,57 @@ def ask_order(**kwargs):
             "default": False
         },
         {
-            "type": "text",
+            "type": "select",
             "name": "NoTradingSessions",
+            "choices": ["1", "2", "3"],
             "when": lambda x: x['prepost'],
             "message": "(386) NoTradingSessions: ",            
         },
+        # ==== TradingSessionID 3 ====
         {
             "type": "select",
-            "name": "TradingSessionID",
-            "message": "(336) TradingSessionID: ",
-            "when": lambda x: x['prepost'],
+            "name": "TradingSessionID1",
+            "message": "(336) TradingSessionID (1): ",
+            "when": lambda x: x['prepost'] and x['NoTradingSessions'] == "3",
             "choices": ["PRE","CORE","POST","ALL"],
-        }        
+        },
+        {
+            "type": "select",
+            "name": "TradingSessionID2",
+            "message": "(336) TradingSessionID (2): ",
+            "when": lambda x: x['prepost'] and x['NoTradingSessions'] == "3",
+            "choices": ["PRE","CORE","POST","ALL"],
+        },
+        {
+            "type": "select",
+            "name": "TradingSessionID3",
+            "message": "(336) TradingSessionID (3): ",
+            "when": lambda x: x['prepost'] and x['NoTradingSessions'] == "3",
+            "choices": ["PRE","CORE","POST","ALL"],
+        },
+        # ==== TradingSessionID 2 ====
+        {
+            "type": "select",
+            "name": "TradingSessionID1",
+            "message": "(336) TradingSessionID (1): ",
+            "when": lambda x: x['prepost'] and x['NoTradingSessions'] == "2",
+            "choices": ["PRE","CORE","POST","ALL"],
+        },
+        {
+            "type": "select",
+            "name": "TradingSessionID2",
+            "message": "(336) TradingSessionID (2): ",
+            "when": lambda x: x['prepost'] and x['NoTradingSessions'] == "2",
+            "choices": ["PRE","CORE","POST","ALL"],
+        },
+        # ==== TradingSessionID 1 ====
+        {
+            "type": "select",
+            "name": "TradingSessionID1",
+            "message": "(336) TradingSessionID (1): ",
+            "when": lambda x: x['prepost'] and x['NoTradingSessions'] == "1",
+            "choices": ["PRE","CORE","POST","ALL"],
+        }
     ]
 
     return prompt(questions, **kwargs)
