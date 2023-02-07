@@ -1,6 +1,7 @@
 import quickfix as fix
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
+import pytz
 
 def genExecID():
     return str(int(time.time() * 1000))
@@ -154,5 +155,36 @@ def resetSequence():
     header.setField(fix.MsgType("4"))
     trade.setField(fix.MsgSeqNum(1))
     trade.setField(fix.NewSeqNo(10))
+
+    return trade
+
+def algoOrder():
+    trade = fix.Message()
+    trade.getHeader().setField(fix.BeginString(fix.BeginString_FIX42))
+    trade.getHeader().setField(fix.MsgType(fix.MsgType_NewOrderSingle))  #35 = D
+
+    trade.setField(fix.Account('TRYIKANG'))   #1 = 'TRYIKANG'
+    trade.setField(fix.ClOrdID(genExecID()))  #11 = Unique order
+    trade.setField(fix.HandlInst(fix.HandlInst_AUTOMATED_EXECUTION_ORDER_PRIVATE_NO_BROKER_INTERVENTION))  # 21 = 1
+
+    trade.setField(fix.StringField(6000, "TWAP"))
+
+    start = datetime.now(pytz.timezone('America/New_York') ).replace(hour=11, minute=30).strftime('%Y%m%d-%H:%M:%S')
+    end = datetime.now(pytz.timezone('America/New_York') ).replace(hour=11, minute=55).strftime('%Y%m%d-%H:%M:%S')
+
+    trade.setField(fix.StringField(6001, start))
+    trade.setField(fix.StringField(6002, end))
+
+    trade.setField(fix.TimeInForce(fix.TimeInForce_DAY))  #59 = 0
+    trade.setField(fix.OrdType(fix.OrdType_MARKET))
+
+    trade.setField(fix.Side(fix.Side_BUY))    # 54
+    trade.setField(fix.Symbol('NOK'))  # 55
+    trade.setField(fix.OrderQty(5000))  #38 = 
+
+    dnow = datetime.utcnow().strftime('%Y%m%d-%H:%M:%S.%f')[:-3]
+    tTag = fix.TransactTime()
+    tTag.setString(dnow)
+    trade.setField(tTag)  # 60 = 
 
     return trade

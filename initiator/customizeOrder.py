@@ -109,7 +109,7 @@ def ask_order(**kwargs):
             "name": "TradingSessionID1",
             "message": "(336) TradingSessionID (1): ",
             "when": lambda x: x['prepost'] and x['NoTradingSessions'] == "1",
-            "choices": ["PRE","CORE","POST","ALL"],
+            "choices": ["PRE","CORE","POST","ALL","NIGHT"],
         }
     ]
 

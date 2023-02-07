@@ -10,7 +10,7 @@ import time
 import logging
 import userlib
 import customizeOrder
-from testscenario import genExecID, cancelOrder, cancelReplaceOrder, generateDollarAmountOrder, generateOrder, generatePrePostOrder, resetSequence
+from testscenario import genExecID, cancelOrder, cancelReplaceOrder, generateDollarAmountOrder, generateOrder, generatePrePostOrder, resetSequence, algoOrder
 from datetime import datetime
 from model.logger import setup_logger
 from model import Field
@@ -315,6 +315,10 @@ class Application(fix.Application):
         trade = generatePrePostOrder('NOK', 'buy', 1, 3.1)
         fix.Session.sendToTarget(trade, self.sessionID)
 
+    def twapOrder(self):
+        trade = algoOrder()
+        fix.Session.sendToTarget(trade, self.sessionID)
+
     def reset_sequence(self):
         trade = resetSequence()
         fix.Session.sendToTarget(trade, self.sessionID)
@@ -566,6 +570,10 @@ class Application(fix.Application):
                 print('Reset sequence')
                 self.reset_sequence()
 
+            if myInput == 'twap':
+                print('TWAP Trade')
+                self.twapOrder()
+
             if myInput == 'exit':
                 print('[User exit]')
                 self.User_Logout()
@@ -609,6 +617,7 @@ class Application(fix.Application):
                 print('D: Test D Fractional Shares')
                 print('E: Test E Pre/Post market shares')
                 print('input: Customize Order')
+                print('twap: TWAP Order')
                 print('======')
 
             else:
